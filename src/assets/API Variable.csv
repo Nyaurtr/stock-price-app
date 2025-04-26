@@ -1,0 +1,15 @@
+Table Column,API Variable,API Source
+CK,Symbol,Daily Stock Price
+Trần,CeilingPrice,Daily Stock Price
+Sàn,FloorPrice,Daily Stock Price
+TC,RefPrice,Daily Stock Price
+Khớp lệnh (Giá),ClosePrice,Daily Stock Price
+Khớp lệnh (KL),TotalMatchVol,Daily Stock Price
+Khớp lệnh (+/-),PriceChange,Daily Stock Price
+Khớp lệnh (+/- %),PerPriceChange,Daily Stock Price
+Tổng KL,TotalTradedVol,Daily Stock Price
+Cao,HighestPrice,Daily Stock Price
+Thấp,LowestPrice,Daily Stock Price
+ĐTNN (Mua),ForeignBuyVolTotal,Daily Stock Price
+ĐTNN (Bán),ForeignSellVolTotal,Daily Stock Price
+ĐTNN (Room),ForeignCurrentRoom,Daily Stock Price

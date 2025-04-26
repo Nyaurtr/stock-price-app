@@ -1,0 +1,372 @@
+URL: https://fc-data.ssi.com.vn/api/v2/Market/AccessToken    
+Method: POST    
+Request Body (JSON):
+JSON
+
+{
+  "consumerID": "your_consumer_id",
+  "consumerSecret": "your_consumer_secret"
+}
+Response Body (JSON):
+JSON
+
+{
+  "status": "Success",
+  "message": "Success",
+  "data": "access_token"
+}
+2. Securities List
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/Securities    
+Method: GET    
+Request Query Parameters:
+{
+  "market": "HOSE or HNX or UPCOM or DER",
+  "pageIndex": 1,
+  "pageSize": 10
+}
+Response Body (JSON):
+JSON
+
+{
+  "data": [
+    {
+      "Market": "HOSE",
+      "Symbol": "AAA",
+      "StockName": "CTCP NHUA&MT XANH AN PHAT",
+      "StockEnName": "An Phat Bioplastics Joint Stock Company"
+    },
+    {
+      "Market": "HOSE",
+      "Symbol": "AAM",
+      "StockName": "CTCP THUY SAN MEKONG",
+      "StockEnName": "Mekong Fisheries Joint Stock Company"
+    }
+  ],
+  "message": "Success",
+  "status": "Success",
+  "totalRecord": 560
+}
+3. Securities Details
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/SecuritiesDetails    
+Method: GET    
+Request Query Parameters:
+{
+  "market": "HOSE or HNX or UPCOM or DER",
+  "symbol": "Stock Symbol",
+  "pageIndex": 1,
+  "lookupRequest.pageSize": 10
+}
+Response Body (JSON):
+JSON
+
+{
+  "dataList": [
+    {
+      "rtype": "y",
+      "reportdate": "04/05/2020",
+      "totalnosym": "1",
+      "repeatedinfoList": [
+        {
+          "isin": "",
+          "symbol": "SSI",
+          "symbolname": "Công ty Cổ phần Chứng khoán SSI",
+          "symbolengname": "SSI Securities Corporation",
+          "sectype": "ST",
+          "marketid": "HOSE",
+          "exchange": "HOSE",
+          "issuer": "Công ty Cổ phần Chứng khoán SSI",
+          "lotsize": "10",
+          "issuedate": "",
+          "maturitydate": "",
+          "firsttradingdate": "",
+          "lasttradingdate": "",
+          "contractmultiplier": "0",
+          "settlmethod": "C",
+          "underlying": "",
+          "putorcall": "",
+          "exerciseprice": "0",
+          "exercisestyle": "",
+          "excerciseratio": "0",
+          "listedshare": "602952421",
+          "tickprice1": "1",
+          "tickincrement1": "10",
+          "tickprice2": "10000",
+          "tickincrement2": "50",
+          "tickprice3": "50000",
+          "tickincrement3": "100",
+          "tickprice4": "",
+          "tickincrement4": ""
+        }
+      ]
+    }
+  ],
+  "message": "SUCCESS",
+  "status": "SUCCESS",
+  "totalrecord": 1,
+  "securitiesdetailsresponse": {}
+}
+4. Index Component
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/IndexComponents    
+Method: GET    
+Request Query Parameters:
+{
+  "Indexcode": "VN30",
+  "PageIndex": 1,
+  "PageSize": 10
+}
+Response Body (JSON):
+JSON
+
+{
+  "dataList": [
+    {
+      "indexcode": "VN30",
+      "indexname": "VN30",
+      "exchange": "HOSE",
+      "totalsymbolno": "30",
+      "indexcomponentList": [
+        {
+          "isin": "BID",
+          "stocksymbol": "BID"
+        },
+        {
+          "isin": "BVH",
+          "stocksymbol": "BVH"
+        }
+      ]
+    }
+  ],
+  "message": "SUCCESS",
+  "status": "SUCCESS",
+  "totalrecord": 30,
+  "indexcomponentresponse": {}
+}
+5. Index List
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/IndexList    
+Method: GET    
+Request Query Parameters:
+{
+  "Exchange": "HOSE or HNX",
+  "PageIndex": 1,
+  "PageSize": 10
+}
+Response Body (JSON):
+JSON
+
+{
+  "dataList": [
+    {
+      "indexcode": "HNX30",
+      "indexname": "HNX30",
+      "exchange": "HNX"
+    },
+    {
+      "indexcode": "HNXIndex",
+      "indexname": "HNXIndex",
+      "exchange": "HNX"
+    },
+    {
+      "indexcode": "HNXUpcomIndex",
+      "indexname": "HNXUpcomIndex",
+      "exchange": "HNX"
+    }
+  ],
+  "message": "SUCCESS",
+  "status": "SUCCESS",
+  "totalrecord": 3,
+  "indexlistresponse": {}
+}
+6. Daily OHLC
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/DailyOhlc    
+Method: GET    
+Request Query Parameters:
+{
+  "Symbol": "SSI",
+  "FromDate": "04/05/2020",
+  "ToDate": "04/05/2020",
+  "PageIndex": 1,
+  "PageSize": 10,
+  "ascending": true
+}
+Response Body (JSON):
+JSON
+
+{
+  "dataList": [
+    {
+      "symbol": "SSI",
+      "market": "HOSE",
+      "tradingdate": "04/05/2020",
+      "time": "",
+      "open": "12900",
+      "high": "13000",
+      "low": "12700",
+      "close": "12700",
+      "volume": "2180310",
+      "value": "27943000000"
+    }
+  ],
+  "message": "SUCCESS",
+  "status": "SUCCESS",
+  "totalrecord": 1,
+  "dailyohlcresponse": {}
+}
+7. Intraday OHLC
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/IntradayOhlc    
+Method: POST    
+Request Body (JSON):
+JSON
+
+{
+  "Symbol": "SSI",
+  "FromDate": "04/05/2020",
+  "ToDate": "04/05/2020",
+  "PageIndex": 1,
+  "PageSize": 10,
+  "resolution": 1,
+  "ascending": false
+}
+Response Body (JSON):
+JSON
+
+{
+  "dataList": [
+    {
+      "symbol": "SSI",
+      "value": "12900",
+      "tradingdate": "04/05/2020",
+      "time": "09:15:44",
+      "open": "12900",
+      "high": "12900",
+      "low": "12900",
+      "close": "12900",
+      "volume": "25240"
+    },
+    {
+      "symbol": "SSI",
+      "value": "12900",
+      "tradingdate": "04/05/2020",
+      "time": "09:16:55",
+      "open": "12900",
+      "high": "12900",
+      "low": "12900",
+      "close": "12900",
+      "volume": "6650"
+    }
+  ],
+  "message": "SUCCESS",
+  "status": "SUCCESS",
+  "totalrecord": 200,
+  "intradayohlcresponse": {}
+}
+8. Daily Index
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/DailyIndex    
+Method: GET    
+Request Query Parameters:
+{
+  "Indexcode": "HNXindex",
+  "FromDate": "04/05/2020",
+  "ToDate": "04/05/2020",
+  "PageIndex": 1,
+  "PageSize": 10,
+  "OrderBy": "Tradingdate",
+  "Order": "desc"
+}
+Response Body (JSON):
+JSON
+
+{
+  "dataList": [
+    {
+      "indexid": "HNXIndex",
+      "indexvalue": "105.72",
+      "tradingdate": "04/05/2020",
+      "time": "",
+      "change": "-0.0112",
+      "ratiochange": "-1.05",
+      "totaltrade": "0",
+      "totalmatchvol": "40342400",
+      "totalmatchval": "295811440000",
+      "typeindex": "Main",
+      "indexname": "HNXIndex",
+      "advances": "59",
+      "nochanges": "56",
+      "declines": "92",
+      "ceilings": "15",
+      "floors": "18",
+      "totaldealvol": "1236772",
+      "totaldealval": "20217698200",
+      "totalvol": "41579172",
+      "totalval": "316029138200",
+      "tradingsession": "C"
+    }
+  ],
+  "message": "SUCCESS",
+  "status": "SUCCESS",
+  "totalrecord": 1,
+  "dailyindexresponse": {}
+}
+9. Daily Stock Price
+
+URL: https://fc-data.ssi.com.vn/api/v2/Market/DailyStockPrice    
+Method: GET    
+Request Query Parameters:
+{
+  "Symbol": "SSI",
+  "FromDate": "22/05/2020",
+  "ToDate": "22/05/2020",
+  "PageIndex": 1,
+  "PageSize": 10,
+  "Market": "HOSE"
+}
+Response Body (JSON):
+JSON
+
+{
+  "dataList": [
+    {
+      "tradingdate": "04/05/2020",
+      "pricechange": "-300",
+      "perpricechange": "-2.30",
+      "ceilingprice": "13900",
+      "floorprice": "12100",
+      "refprice": "13000",
+      "openprice": "12900",
+      "highestprice": "13000",
+      "lowestprice": "12700",
+      "closeprice": "12700",
+      "averageprice": "12816",
+      "closepriceadjusted": "12700",
+      "totalmatchvol": "2180310",
+      "totalmatchval": "27943000000",
+      "totaldealval": "0",
+      "totaldealvol": "0",
+      "foreignbuyvoltotal": "25310",
+      "foreigncurrentroom": "253974102",
+      "foreignsellvoltotal": "1117250",
+      "foreignbuyvaltotal": "322702500",
+      "foreignsellvaltotal": "14244937500",
+      "totalbuytrade": "0",
+      "totalbuytradevol": "0",
+      "totalselltrade": "0",
+      "totalselltradevol": "0",
+      "netbuysellvol": "-1091940",
+      "netbuysellval": "-13922235000",
+      "totaltradedvol": "2180310",
+      "totaltradedvalue": "27943000000",
+      "symbol": "SSI",
+      "time": ""
+    }
+  ],
+  "message": "SUCCESS",
+  "status": "SUCCESS",
+  "totalrecord": 1,
+  "stockpriceresponse": {}
+}
