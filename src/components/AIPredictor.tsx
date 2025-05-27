@@ -113,7 +113,7 @@ const AIPredictor: React.FC<AIPredictorProps> = ({ symbol }) => {
             prediction: trendData.Prediction,
             probability: trendData.Prob_Class_1,
             text: trendText,
-            date: '2025-04-28'
+            date: '2025-05-05'
           });
         }
       } catch (err) {

@@ -364,7 +364,10 @@ export const apiService = {
     if (!symbol) {
       throw new Error('Symbol is required');
     }
-    
+    if (!fromDate || !toDate) {
+      throw new Error('Both fromDate and toDate are required');
+    }
+        
     return makeRequest('get', '/Market/DailyStockPrice', {
       Symbol: symbol,
       FromDate: fromDate,

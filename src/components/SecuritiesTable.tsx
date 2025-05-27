@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import apiService from '../services/apiService';
 import ApiButton from './ApiButton';
 import ApiFormField from './ApiFormField';
@@ -67,35 +67,42 @@ const SecuritiesTable: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(format(subDays(new Date(), 1), 'yyyy-MM-dd'));
   
   // Refs for tracking changes and debouncing
   const debouncedFetchRef = useRef<number | null>(null);
   const isPendingFetchRef = useRef(false);
-  const latestParamsRef = useRef({ market, currentPage, pageSize });
+  const latestParamsRef = useRef({ market, currentPage, pageSize, selectedDate });
   
   // Update latest params ref when dependencies change
   useEffect(() => {
-    latestParamsRef.current = { market, currentPage, pageSize };
-  }, [market, currentPage, pageSize]);
+    latestParamsRef.current = { market, currentPage, pageSize, selectedDate };
+  }, [market, currentPage, pageSize, selectedDate]);
   
+  // Format date for API (DD/MM/YYYY)
+  const formatDateForApi = (dateString: string): string => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   // Function to handle fetching securities list
-  const fetchSecuritiesList = async (refresh = false) => {
+  const fetchSecuritiesList = async (refresh = false, forceDate?: string) => {
     if (!refresh) {
       setLoading(true);
     }
     setError(null);
     
-    // Mark that a fetch is in progress to avoid duplicate calls
+    // Use the forced date if provided, otherwise use the current selectedDate
+    const dateToUse = forceDate || selectedDate;
+    console.log('Fetching securities with date:', dateToUse);
+    
     isPendingFetchRef.current = true;
     
     try {
-      // Get securities list from the API
       const response = await apiService.getSecuritiesList(market, 1, 1000, !refresh);
       
-      console.log('API Response:', response); // Debug log
-      
       if (response?.status === 'Success') {
-        // Extract securities data
         let symbolsList: SecurityListItem[] = [];
         
         if (response.data && Array.isArray(response.data)) {
@@ -115,7 +122,6 @@ const SecuritiesTable: React.FC = () => {
             return Array.isArray(value) && value.length > 0;
           })
         ) {
-          // Look for any array property that might contain the securities list
           const arrayKey = Object.keys(response.data).find(key => {
             const value = (response.data as Record<string, unknown>)[key];
             return Array.isArray(value) && value.length > 0;
@@ -127,7 +133,6 @@ const SecuritiesTable: React.FC = () => {
             throw new Error('Unable to locate securities data in API response');
           }
         } else {
-          console.error('Unexpected API response structure:', response.data);
           throw new Error('Unable to locate securities data in API response');
         }
         
@@ -135,34 +140,22 @@ const SecuritiesTable: React.FC = () => {
           throw new Error('No securities found for the selected market');
         }
         
-        // Extract symbols - filter undefined values
         const symbolsExtracted = symbolsList
-          .map(item => {
-            // Just use the direct properties and skip the complex lookup
-            return item.symbol || item.Symbol;
-          })
-          .filter((symbol): symbol is string => !!symbol); // Type guard to filter out undefined values
+          .map(item => item.symbol || item.Symbol)
+          .filter((symbol): symbol is string => !!symbol);
 
-        console.log('Extracted symbols:', symbolsExtracted.slice(0, 5)); // Debug log (show first 5)
-        
         setTotalSymbols(symbolsExtracted.length);
         
-        // Calculate total pages
         const calculatedTotalPages = Math.ceil(symbolsExtracted.length / pageSize);
         setTotalPages(calculatedTotalPages);
         
-        // Make sure current page is valid
         const validatedCurrentPage = Math.min(currentPage, calculatedTotalPages || 1);
         if (validatedCurrentPage !== currentPage) {
           setCurrentPage(validatedCurrentPage);
         }
         
-        // Get paginated symbols
         const startIndex = (validatedCurrentPage - 1) * pageSize;
         const paginatedSymbols = symbolsExtracted.slice(startIndex, startIndex + pageSize);
-        
-        // Fetch price data for all symbols in parallel
-        const todayFormatted = format(new Date(), 'dd/MM/yyyy');
         
         if (paginatedSymbols.length === 0) {
           setSecurities([]);
@@ -170,10 +163,8 @@ const SecuritiesTable: React.FC = () => {
           return;
         }
         
-        // Reset loading progress
         setLoadingProgress({ current: 0, total: paginatedSymbols.length });
         
-        // Add event listener for custom events from API service
         const handleFetchProgress = () => {
           setLoadingProgress(prev => ({ 
             ...prev, 
@@ -181,20 +172,16 @@ const SecuritiesTable: React.FC = () => {
           }));
         };
         
-        // Register event listener
         window.addEventListener('api:fetch-progress', handleFetchProgress as EventListener);
+        const formattedDate = formatDateForApi(dateToUse);
+        console.log('Making API call with formatted date:', formattedDate);
+        const results = await apiService.batchGetDailyStockPrices(paginatedSymbols, formattedDate, formattedDate);
         
-        const results = await apiService.batchGetDailyStockPrices(paginatedSymbols, todayFormatted, todayFormatted);
-        
-        // Remove event listener
         window.removeEventListener('api:fetch-progress', handleFetchProgress as EventListener);
         
-        // Process the results
         const securitiesData: SecurityData[] = results.map(result => {
           if (result.success && result.response && result.response.status === 'Success') {
             const responseData = result.response.data;
-            
-            // Handle different response structures
             const stockData = Array.isArray(responseData) && responseData.length > 0 
               ? responseData[0] 
               : responseData && typeof responseData === 'object'
@@ -219,15 +206,10 @@ const SecuritiesTable: React.FC = () => {
                 foreignCurrentRoom: stockData.ForeignCurrentRoom || stockData.foreignCurrentRoom
               };
             }
-          } else if (result.error) {
-            console.warn(`Error fetching data for ${result.symbol}:`, result.error);
           }
-          
-          // Return minimal data if we don't have complete data
           return { symbol: result.symbol };
         });
         
-        // Update state
         setSecurities(securitiesData);
         setLastUpdated(new Date());
         
@@ -245,28 +227,31 @@ const SecuritiesTable: React.FC = () => {
       if (!refresh) {
         setLoading(false);
       }
-      // Reset loading progress
       setLoadingProgress({ current: 0, total: 0 });
-      
-      // Mark that fetch is completed
       isPendingFetchRef.current = false;
     }
   };
   
+  // Handle date change with immediate fetch
+  const handleDateChange = async (value: string) => {
+    console.log('Date changed to:', value);
+    setSelectedDate(value);
+    
+    // Force an immediate fetch with the new date
+    await fetchSecuritiesList(false, value);
+  };
+  
   // Debounced fetch function to prevent rapid API calls
   const debouncedFetch = useCallback(() => {
-    // Clear any existing timeout
     if (debouncedFetchRef.current) {
       clearTimeout(debouncedFetchRef.current);
     }
     
-    // Set a new timeout to delay the fetch
     debouncedFetchRef.current = setTimeout(() => {
-      // Only fetch if another fetch isn't already in progress
       if (!isPendingFetchRef.current) {
         fetchSecuritiesList();
       }
-    }, 300); // 300ms debounce time
+    }, 300);
   }, []);
   
   // Setup interval for auto-refresh if enabled
@@ -284,15 +269,17 @@ const SecuritiesTable: React.FC = () => {
   
   // Initial data fetch and handling parameter changes
   useEffect(() => {
-    debouncedFetch();
+    // Only trigger debounced fetch for non-date changes
+    if (!isPendingFetchRef.current) {
+      debouncedFetch();
+    }
     
-    // Cleanup function
     return () => {
       if (debouncedFetchRef.current) {
         clearTimeout(debouncedFetchRef.current);
       }
     };
-  }, [market, currentPage, pageSize, debouncedFetch]);
+  }, [market, currentPage, pageSize, debouncedFetch]); // selectedDate removed from dependencies
   
   // Handle sort
   const handleSort = (column: keyof SecurityData) => {
@@ -465,68 +452,94 @@ const SecuritiesTable: React.FC = () => {
   };
   
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex-grow">
-          <h2 className="text-xl font-bold">Securities Data</h2>
-          <div className="text-sm text-gray-500 flex items-center">
-            {lastUpdated ? (
-              <>
-                <span>Last updated: {format(lastUpdated, 'HH:mm:ss')}</span>
-                {loading && <span className="ml-2 text-blue-600 animate-pulse">(Refreshing...)</span>}
-              </>
-            ) : loading ? (
-              <span className="text-blue-600 animate-pulse">Loading data...</span>
-            ) : null}
+    <div className="animate-fade-in">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Securities Data</h2>
+            <div className="text-sm text-gray-500 flex items-center">
+              {lastUpdated ? (
+                <>
+                  <span>Last updated: {format(lastUpdated, 'HH:mm:ss')}</span>
+                  {loading && <span className="ml-2 text-blue-600 animate-pulse">(Refreshing...)</span>}
+                </>
+              ) : loading ? (
+                <span className="text-blue-600 animate-pulse">Loading data...</span>
+              ) : null}
+            </div>
           </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-shrink-0">
-            <ApiFormField
-              label="Market"
-              value={market}
-              onChange={handleMarketChange}
-              options={MARKET_OPTIONS}
-              required
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <ApiFormField
+                label="Market"
+                value={market}
+                onChange={handleMarketChange}
+                options={MARKET_OPTIONS}
+                required
+              />
+            </div>
+            
+            <div>
+              <ApiFormField
+                label="Date"
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                required
+              />
+            </div>
+            
+            <div>
+              <ApiFormField
+                label="Symbols per page"
+                value={pageSize.toString()}
+                onChange={handlePageSizeChange}
+                options={PAGE_SIZE_OPTIONS}
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <ApiButton
+                onClick={handleRefresh}
+                isLoading={loading}
+              >
+                Refresh Data
+              </ApiButton>
+            </div>
           </div>
           
-          <div className="flex-shrink-0">
-            <ApiFormField
-              label="Filter"
-              value={filterText}
-              onChange={setFilterText}
-              placeholder="Search symbols..."
-            />
-          </div>
-          
-          <div className="flex-shrink-0">
-            <ApiFormField
-              label="Symbols per page"
-              value={pageSize.toString()}
-              onChange={handlePageSizeChange}
-              options={PAGE_SIZE_OPTIONS}
-            />
-          </div>
-          
-          <div className="flex-shrink-0">
-            <ApiFormField
-              label="Auto refresh (secs)"
-              value={refreshInterval?.toString() || ''}
-              onChange={handleAutoRefreshChange}
-              placeholder="Disabled"
-            />
-          </div>
-          
-          <div className="flex-shrink-0 flex items-end">
-            <ApiButton
-              onClick={handleRefresh}
-              isLoading={loading}
-              variant="outline"
-            >
-              Refresh
-            </ApiButton>
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="Filter by symbol..."
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  className="form-input"
+                />
+                
+                <div className="text-sm text-gray-500">
+                  {filterText ? filteredAndSortedSecurities.length : totalSymbols} symbols
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium">Auto-refresh:</label>
+                <select 
+                  className="form-select"
+                  value={refreshInterval?.toString() || '0'}
+                  onChange={(e) => handleAutoRefreshChange(e.target.value)}
+                >
+                  <option value="0">Off</option>
+                  <option value="10">10s</option>
+                  <option value="30">30s</option>
+                  <option value="60">1m</option>
+                  <option value="300">5m</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>

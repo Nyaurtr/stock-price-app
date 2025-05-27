@@ -25,8 +25,8 @@ app.add_middleware(
 )
 
 # Load monthly return and factor data
-returns_path = "E:/CODE/fc-data/stock-price-app/src/assets/monthly_prices_complete_2020_to_2025.csv"
-factors_path = "E:/CODE/fc-data/stock-price-app/src/assets/final_five_factors.csv"
+returns_path = "D:/Personal Project/Code/Website/stock-price-app/src/assets/monthly_prices_complete_2020_to_2025.csv"
+factors_path = "D:/Personal Project/Code/Website/stock-price-app/src/assets/final_five_factors.csv"
 
 price_df = pd.read_csv(returns_path, parse_dates=['Date']).set_index('Date')
 factors_df = pd.read_csv(factors_path, parse_dates=['Date']).set_index('Date')
